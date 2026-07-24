@@ -62,15 +62,16 @@ that consumes audio files.
 
 | Piece | What | Cost | Where it runs |
 |---|---|---|---|
-| [`sfx-gen-mcp/`](sfx-gen-mcp/) | Sound effects & foley | Free, unlimited | Your GPU (Apple Silicon or CUDA) |
+| [sfx-gen-mcp](https://github.com/JimCline/sfx-gen-mcp) | Sound effects & foley | Free, unlimited | Your GPU (Apple Silicon or CUDA) |
 | [gemini-media-mcp](https://github.com/mordor-forge/gemini-media-mcp) | Music & voice lines | Paid Gemini API | Google's servers, local Go binary as the bridge |
 | [`skills/game-audio-audition/`](skills/game-audio-audition/) | The audition workflow | — | Inside Claude Code |
 
 ## How each piece works
 
-### 1. sfx-gen-mcp — local sound effect generation
+### 1. [sfx-gen-mcp](https://github.com/JimCline/sfx-gen-mcp) — local sound effect generation
 
-A small (~300 line) Python [MCP](https://modelcontextprotocol.io) server that
+A small (~300 line) Python [MCP](https://modelcontextprotocol.io) server
+(its own repo — usable standalone with any MCP client) that
 wraps Stability AI's [Stable Audio Open 1.0](https://huggingface.co/stabilityai/stable-audio-open-1.0),
 a latent-diffusion model trained for exactly this niche: short sounds, foley,
 and ambiences up to 47 seconds. The agent calls one tool:
@@ -99,7 +100,7 @@ Design decisions worth studying:
 - **MPS patch for Apple Silicon.** Upstream `stable-audio-tools` uses float64
   inside its APG projection, which Apple's MPS backend lacks. The server
   monkey-patches that one method with a float32 fallback on MPS
-  ([`server.py`](sfx-gen-mcp/src/sfx_gen_mcp/server.py), `_patch_mps_float64`)
+  ([`server.py`](https://github.com/JimCline/sfx-gen-mcp/blob/main/src/sfx_gen_mcp/server.py), `_patch_mps_float64`)
   — identical math elsewhere. On an M-series GPU a 50-step clip takes
   ~15–30 s.
 - **stdout hygiene.** On stdio transport, stdout carries the MCP protocol —
@@ -195,14 +196,15 @@ edit, not a rewrite.
 ## Install
 
 ```sh
-git clone https://github.com/YOUR_USERNAME/game-audio-kit
+git clone https://github.com/JimCline/game-audio-kit
 cd game-audio-kit
 ./install.sh              # or: ./install.sh --skip-gemini  for SFX-only
 ```
 
 The installer:
 
-1. installs `sfx-gen-mcp` as a `uv` tool and sets up the supervised daemon
+1. installs [`sfx-gen-mcp`](https://github.com/JimCline/sfx-gen-mcp) as a
+   `uv` tool from its own repo and sets up the supervised daemon
    (launchd on macOS, systemd user service on Linux) on port **8756**;
 2. downloads the prebuilt `gemini-media-mcp` binary for your platform from
    its GitHub releases and prompts for your `GEMINI_API_KEY` (Enter to skip)
@@ -244,7 +246,8 @@ your generated audio in place, and prints where they are.
 
 ## Licenses
 
-- This kit and `sfx-gen-mcp`: **MIT** ([LICENSE](LICENSE))
+- This kit: **MIT** ([LICENSE](LICENSE))
+- [`sfx-gen-mcp`](https://github.com/JimCline/sfx-gen-mcp): **MIT** (own repo)
 - `gemini-media-mcp`: **Apache-2.0** (upstream repo; installed as a binary,
   not vendored)
 - **Stable Audio Open 1.0 weights**: [Stability AI Community License](https://huggingface.co/stabilityai/stable-audio-open-1.0)

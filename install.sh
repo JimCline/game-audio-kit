@@ -23,6 +23,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SFX_PORT=8756
 GEMINI_MEDIA_VERSION="${GEMINI_MEDIA_VERSION:-0.1.1}"
 GEMINI_MEDIA_REPO="mordor-forge/gemini-media-mcp"
+SFX_GEN_REPO="JimCline/sfx-gen-mcp"
 BIN_DIR="$HOME/.local/bin"
 SKILL_DIR="$HOME/.claude/skills/game-audio-audition"
 SFX_OUTPUT_DIR="${SFX_OUTPUT_DIR:-$HOME/game-audio-kit-output/sfx}"
@@ -69,7 +70,7 @@ fi
 # ------------------------------------------------- 1. sfx-gen-mcp (local SFX)
 bold "Installing sfx-gen-mcp (local Stable Audio Open MCP server)"
 
-uv tool install --force "$REPO_DIR/sfx-gen-mcp" >/dev/null
+uv tool install --force "git+https://github.com/$SFX_GEN_REPO" >/dev/null
 SFX_BIN="$(uv tool dir)/sfx-gen-mcp/bin/sfx-gen-mcp"
 [ -x "$SFX_BIN" ] || SFX_BIN="$BIN_DIR/sfx-gen-mcp"
 [ -x "$SFX_BIN" ] || die "sfx-gen-mcp installed but binary not found on expected paths"
