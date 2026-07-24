@@ -205,7 +205,9 @@ The installer:
 1. installs `sfx-gen-mcp` as a `uv` tool and sets up the supervised daemon
    (launchd on macOS, systemd user service on Linux) on port **8756**;
 2. downloads the prebuilt `gemini-media-mcp` binary for your platform from
-   its GitHub releases and prompts for your `GEMINI_API_KEY` (Enter to skip);
+   its GitHub releases and prompts for your `GEMINI_API_KEY` (Enter to skip)
+   — on macOS the key goes into the **Keychain** and a small wrapper injects
+   it at server launch, so it never sits in a plaintext config file;
 3. copies the `game-audio-audition` skill into `~/.claude/skills/`;
 4. registers both MCP servers with Claude Code at user scope.
 

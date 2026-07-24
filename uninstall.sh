@@ -58,6 +58,18 @@ else
 fi
 
 bold "Removing gemini-media-mcp"
+if [ -f "$BIN_DIR/with-gemini-key" ]; then
+  rm -f "$BIN_DIR/with-gemini-key"
+  info "keychain wrapper removed"
+fi
+if [ "$(uname -s)" = "Darwin" ] && security find-generic-password -s gemini-api-key >/dev/null 2>&1; then
+  if confirm "Delete the 'gemini-api-key' item from the macOS Keychain?"; then
+    security delete-generic-password -s gemini-api-key >/dev/null
+    info "keychain item removed"
+  else
+    skip "keychain item kept"
+  fi
+fi
 if [ -f "$BIN_DIR/gemini-media-mcp" ]; then
   if confirm "Delete $BIN_DIR/gemini-media-mcp?"; then
     rm -f "$BIN_DIR/gemini-media-mcp"

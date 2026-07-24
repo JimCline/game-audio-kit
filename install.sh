@@ -182,10 +182,30 @@ if [ "$SKIP_GEMINI" = 0 ]; then
 
   if [ -n "${GEMINI_API_KEY:-}" ] && [ "$HAVE_CLAUDE" = 1 ]; then
     claude mcp remove --scope user gemini-media >/dev/null 2>&1 || true
-    claude mcp add --scope user gemini-media "$BIN_DIR/gemini-media-mcp" \
-      --env "GEMINI_API_KEY=$GEMINI_API_KEY" \
-      --env "MEDIA_OUTPUT_DIR=$MEDIA_OUTPUT_DIR" >/dev/null
-    info "registered MCP server 'gemini-media' (user scope)"
+    if [ "$OS" = "Darwin" ]; then
+      # Keep the key out of plaintext config: store it in the macOS Keychain
+      # and register a wrapper that injects it at server launch.
+      security add-generic-password -a "$USER" -s gemini-api-key -w "$GEMINI_API_KEY" -U
+      cat > "$BIN_DIR/with-gemini-key" <<'WRAP'
+#!/bin/bash
+# Fetch GEMINI_API_KEY from the macOS Keychain (service "gemini-api-key") and
+# exec the given command with it in the environment.
+export GEMINI_API_KEY="$(security find-generic-password -s gemini-api-key -w)"
+[ -n "$GEMINI_API_KEY" ] || { echo "with-gemini-key: no 'gemini-api-key' item in Keychain" >&2; exit 1; }
+exec "$@"
+WRAP
+      chmod 755 "$BIN_DIR/with-gemini-key"
+      claude mcp add --scope user gemini-media "$BIN_DIR/with-gemini-key" "$BIN_DIR/gemini-media-mcp" \
+        --env "MEDIA_OUTPUT_DIR=$MEDIA_OUTPUT_DIR" >/dev/null
+      info "API key stored in the macOS Keychain (service 'gemini-api-key')"
+      info "registered MCP server 'gemini-media' via keychain wrapper (user scope)"
+    else
+      claude mcp add --scope user gemini-media "$BIN_DIR/gemini-media-mcp" \
+        --env "GEMINI_API_KEY=$GEMINI_API_KEY" \
+        --env "MEDIA_OUTPUT_DIR=$MEDIA_OUTPUT_DIR" >/dev/null
+      info "registered MCP server 'gemini-media' (user scope)"
+      warn "note: the key is stored in plaintext in ~/.claude.json on this platform"
+    fi
   else
     warn "gemini-media not registered. When ready:"
     warn "  claude mcp add --scope user gemini-media $BIN_DIR/gemini-media-mcp \\"
